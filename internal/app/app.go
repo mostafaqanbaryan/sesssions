@@ -61,6 +61,10 @@ func (a *App) ListCommand() error {
 	window.Preview("ls -1 {5}")
 	window.ShowColumns("1,2,3,4")
 	selected, command, err := window.Display(rows)
+	if errors.Is(err, domain.ErrEmptySelection) {
+		return nil
+	}
+
 	if err != nil && !errors.Is(err, domain.ErrEmptySelection) {
 		return err
 	}
