@@ -67,7 +67,7 @@ func (t Tmux) AttachSession(selected domain.SearchItem) error {
 
 func (t Tmux) ListSessions() []domain.SearchDirectoryItem {
 	var list []domain.SearchDirectoryItem
-	cmd := exec.Command("tmux", "list-sessions", "-F", "#{session_attached}\t#S\t#{@root}")
+	cmd := exec.Command("tmux", "list-sessions", "-O", "activity", "-f", "#{==:#{session_attached},0}", "-F", "#{session_attached}\t#S\t#{@root}")
 	cmd.Stdout = nil
 	cmd.Stderr = nil
 
