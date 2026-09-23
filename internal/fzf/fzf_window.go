@@ -39,6 +39,10 @@ func (f *FzfWindow[T]) Preview(command string) {
 	f.cmd.Args = append(f.cmd.Args, "--preview", command)
 }
 
+func (f *FzfWindow[T]) Prompt(prompt string) {
+	f.cmd.Args = append(f.cmd.Args, "--prompt", prompt+"> ")
+}
+
 func (f *FzfWindow[T]) ShowColumns(columns string) {
 	f.cmd.Args = append(f.cmd.Args, "--with-nth", columns)
 }
@@ -53,7 +57,6 @@ func (f *FzfWindow[T]) Display(rows []string) (T, string, error) {
 	f.cmd.Args = append(f.cmd.Args, "--preview-window", "right,30%")
 	f.cmd.Args = append(f.cmd.Args, "--reverse")
 	f.cmd.Args = append(f.cmd.Args, "--style", "full")
-	f.cmd.Args = append(f.cmd.Args, "--prompt", "Session > ")
 	f.cmd.Args = append(f.cmd.Args, "--pointer", "→")
 	if f.binds != nil {
 		f.cmd.Args = append(f.cmd.Args, "--expect", strings.Join(f.binds, ","))

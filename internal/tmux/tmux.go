@@ -65,6 +65,15 @@ func (t Tmux) AttachSession(selected domain.SearchItem) error {
 	return nil
 }
 
+func (t Tmux) SendKeys(sessionName string, command string) error {
+	cmd := exec.Command("tmux", "send-keys", "-t", sessionName, command, "C-m")
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("send-keys error: %w", err)
+	}
+	return nil
+}
+
 func (t Tmux) ListSessions() []domain.SearchDirectoryItem {
 	var list []domain.SearchDirectoryItem
 	cmd := exec.Command("tmux", "list-sessions", "-O", "activity", "-F", "#{session_attached}\t#S\t#{@root}")

@@ -13,6 +13,7 @@ type Window[T any] interface {
 	BindKey(key, description string)
 	Cwd(cwd string)
 	Preview(command string)
+	Prompt(prompt string)
 	ShowColumns(columns string)
 	Display(rows []string) (T, string, error)
 }

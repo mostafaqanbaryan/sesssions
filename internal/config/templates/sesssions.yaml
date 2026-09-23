@@ -1,0 +1,105 @@
+# sesssions - global configuration
+#
+# Auto-created on first run. `sesssions init` refreshes the bundled language
+# templates in place when template_version is old, keeping your projects list
+# and any custom languages. Edit freely.
+#
+# Per-project overrides live in a `.sesssions.yaml` inside each project root.
+
+template_version: 2
+
+# Project root directories searched by the interactive list command.
+# Use `~` to scan your whole home directory one level deep,
+# or list specific folders (e.g. `~/Projects/`).
+projects:
+  - "~"
+
+# Each language defines the docker-compose YAML template and default
+# environment for projects initialized with that language.
+# Placeholders:
+#   {uid}               the current user id
+#   {base}              the base name of the project directory
+#   __SESSION_NAME__    replaced with the worktree/session identifier
+#   ${CONTAINER_NAME}   rendered from the environment at compose time
+#   ${go_dlv_port}      host port for the Go Delve debugger, generated on first run
+languages:
+  go:
+    environment:
+      DOMAIN: localhost
+    compose: |
+      services:
+        app:
+          build:
+            context: .
+            dockerfile: Dockerfile.dev
+          container_name: ${CONTAINER_NAME}
+          restart: always
+          env_file:
+            - ./src/.env
+          user: "{uid}"
+          volumes:
+            - ./.go-mod-cache:/go/pkg/mod
+            - ./.go-build-cache:/.cache/go-build
+            - ./src:/app
+          ports:
+            - "${go_dlv_port}:2345"
+          logging:
+            driver: "json-file"
+            options:
+              max-size: "256m"
+              max-file: "3"
+          networks:
+            - dev_network
+          labels:
+            - traefik.enable=true
+            - traefik.http.routers.${CONTAINER_NAME}.rule=Host(${CONTAINER_NAME}.${DOMAIN})
+            - traefik.http.routers.${CONTAINER_NAME}.entrypoints=websecure
+            - traefik.http.routers.${CONTAINER_NAME}.tls=true
+            - traefik.http.routers.${CONTAINER_NAME}.service=${CONTAINER_NAME}
+            - traefik.http.services.${CONTAINER_NAME}.loadbalancer.server.port=3000
+      networks:
+        dev_network:
+          name: dev_network
+          driver: bridge
+          external: true
+
+  php:
+    environment:
+      DOMAIN: localhost
+    compose: |
+      services:
+        php:
+          image: php:8.3-fpm
+          container_name: ${CONTAINER_NAME}_php
+          restart: always
+          env_file:
+            - ./.env
+          user: "{uid}"
+          volumes:
+            - ./src:/var/www/html
+            - ./.composer-cache:/root/.composer/cache
+          networks:
+            - dev_network
+        nginx:
+          image: nginx:alpine
+          container_name: ${CONTAINER_NAME}_nginx
+          restart: always
+          volumes:
+            - ./src:/var/www/html
+            - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+          depends_on:
+            - php
+          networks:
+            - dev_network
+          labels:
+            - traefik.enable=true
+            - traefik.http.routers.${CONTAINER_NAME}.rule=Host(${CONTAINER_NAME}.${DOMAIN})
+            - traefik.http.routers.${CONTAINER_NAME}.entrypoints=websecure
+            - traefik.http.routers.${CONTAINER_NAME}.tls=true
+            - traefik.http.routers.${CONTAINER_NAME}.service=${CONTAINER_NAME}
+            - traefik.http.services.${CONTAINER_NAME}.loadbalancer.server.port=80
+      networks:
+        dev_network:
+          name: dev_network
+          driver: bridge
+          external: true
