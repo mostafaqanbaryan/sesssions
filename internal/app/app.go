@@ -93,6 +93,16 @@ func (a *App) ListCommand() error {
 }
 
 func (a *App) BranchesCommand(cwd string) error {
+	// Resolve a possibly-relative argument (e.g. `sesssions branches .`) so the
+	// branch item's parent is absolute: session names and worktree paths are
+	// derived from it, and a relative "." would otherwise produce a broken
+	// `.__<branch>` session / a worktree in the wrong place.
+	absCwd, err := filepath.Abs(cwd)
+	if err != nil {
+		return err
+	}
+	cwd = absCwd
+
 	searcher := fzf.NewFzf[domain.SearchBranchItem]()
 	window := searcher.NewWindow()
 	window.Preview("git log -n 10 {2}")
